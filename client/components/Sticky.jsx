@@ -72,11 +72,11 @@ function Sticky({ id, text, color, top, left, updateText, updateColor, updatePos
           position: 'absolute',
           top: `${top}px`,
           left: `${left}px`,
-          width: '340px',
-          minHeight: '220px',
+          width: '250px',
+          minHeight: '260px',
           maxHeight: '400px', // Limit max growth
           background: color,
-          borderRadius: '20px',
+          // borderRadius: '20px',
           padding: '28px',
           boxShadow: animate ? '0 30px 60px rgba(0,0,0,0.4)' : '0 12px 35px rgba(0,0,0,0.25)',
           transform: isDragging ? 'scale(1.02)' : (animate ? 'scale(1.05) rotate(3deg)' : 'scale(1)'),
@@ -84,7 +84,7 @@ function Sticky({ id, text, color, top, left, updateText, updateColor, updatePos
           cursor: isDragging ? 'grabbing' : (editMode ? 'text' : 'grab'),
           zIndex: isDragging ? 10001 : 1,
           fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
-          border: '3px solid rgba(255,255,255,0.4)',
+          border: `3px solid  ${color}`,
           overflow: 'hidden'
         }}
         onMouseDown={handleMouseDown}
