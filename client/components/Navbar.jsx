@@ -84,7 +84,7 @@ function Navbar() {
               fontSize: "36px",
               boxShadow: "0 10px 30px rgba(255,235,59,0.4)"
             }}>
-              
+              🚪
             </div>
             <h3 style={{ color: "#333", marginBottom: "12px", fontSize: "24px", fontWeight: "700" }}>
               Confirm Logout
