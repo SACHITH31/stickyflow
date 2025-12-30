@@ -1,38 +1,34 @@
-import express from "express"
-import db from "../db.js"
+import express from "express";
+import db from "../db.js";
 import verifyToken from "../middleware/auth.js";
 
-const router = express.Router()
+const router = express.Router();
 
-
-/* ================================
-   GET ALL STICKIES (LOGGED USER)
-================================ */
+/* GET ALL */
 router.get("/", verifyToken, (req, res) => {
-  const userId = req.user.id
-
   db.query(
     "SELECT * FROM stickies WHERE user_id = ? ORDER BY id ASC",
-    [userId],
+    [req.user.id],
     (err, results) => {
-      if (err) return res.status(500).json(err)
-      res.json(results)
+      if (err) return res.status(500).json({ error: "DB error" });
+      res.json(results);
     }
-  )
-})
+  );
+});
 
-/* ================================
-   CREATE STICKY
-================================ */
+/* CREATE */
 router.post("/", verifyToken, (req, res) => {
-  const userId = req.user.id
-  const { text, color, top_pos, left_pos } = req.body
+  const { text, color, top_pos, left_pos } = req.body;
+
+  if (!text) {
+    return res.status(400).json({ error: "Text required" });
+  }
 
   db.query(
     "INSERT INTO stickies (user_id, text, color, top_pos, left_pos) VALUES (?, ?, ?, ?, ?)",
-    [userId, text, color, top_pos, left_pos],
+    [req.user.id, text, color, top_pos, left_pos],
     (err, result) => {
-      if (err) return res.status(500).json(err)
+      if (err) return res.status(500).json({ error: "DB error" });
 
       res.json({
         id: result.insertId,
@@ -40,56 +36,46 @@ router.post("/", verifyToken, (req, res) => {
         color,
         top_pos,
         left_pos
-      })
+      });
     }
-  )
-})
+  );
+});
 
-/* ================================
-   UPDATE STICKY (TEXT / COLOR / POSITION)
-================================ */
+/* UPDATE */
 router.put("/:id", verifyToken, (req, res) => {
-  const userId = req.user.id
-  const id = req.params.id
-  const { text, color, top_pos, left_pos } = req.body
+  const { text, color, top_pos, left_pos } = req.body;
 
   db.query(
-    `UPDATE stickies 
-     SET text = ?, color = ?, top_pos = ?, left_pos = ?
-     WHERE id = ? AND user_id = ?`,
-    [text, color, top_pos, left_pos, id, userId],
+    `UPDATE stickies SET text=?, color=?, top_pos=?, left_pos=?
+     WHERE id=? AND user_id=?`,
+    [text, color, top_pos, left_pos, req.params.id, req.user.id],
     (err, result) => {
-      if (err) return res.status(500).json(err)
+      if (err) return res.status(500).json({ error: "DB error" });
 
       if (result.affectedRows === 0) {
-        return res.status(404).json({ message: "Sticky not found" })
+        return res.status(404).json({ error: "Sticky not found" });
       }
 
-      res.json({ success: true })
+      res.json({ success: true });
     }
-  )
-})
+  );
+});
 
-/* ================================
-   DELETE STICKY
-================================ */
+/* DELETE */
 router.delete("/:id", verifyToken, (req, res) => {
-  const userId = req.user.id
-  const id = req.params.id
-
   db.query(
-    "DELETE FROM stickies WHERE id = ? AND user_id = ?",
-    [id, userId],
+    "DELETE FROM stickies WHERE id=? AND user_id=?",
+    [req.params.id, req.user.id],
     (err, result) => {
-      if (err) return res.status(500).json(err)
+      if (err) return res.status(500).json({ error: "DB error" });
 
       if (result.affectedRows === 0) {
-        return res.status(404).json({ message: "Sticky not found" })
+        return res.status(404).json({ error: "Sticky not found" });
       }
 
-      res.json({ success: true })
+      res.json({ success: true });
     }
-  )
-})
+  );
+});
 
 export default router;
