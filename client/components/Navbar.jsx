@@ -14,7 +14,7 @@ function Navbar() {
     <>
       {/* ✅ TALL NAVBAR - 140px like welcome bar */}
       <div style={{
-        height: "140px", // Same as welcome bar!
+        height: "100px", // Same as welcome bar!
         background: "linear-gradient(135deg, #111 0%, #1a1a1a 100%)",
         color: "#fff",
         display: "flex",
@@ -29,9 +29,9 @@ function Navbar() {
         borderBottom: "1px solid rgba(255,255,255,0.1)"
       }}>
         <div style={{ 
-          fontSize: "36px", 
+          fontSize: "28px", 
           letterSpacing: "2px",
-          textShadow: "0 2px 10px rgba(0,0,0,0.5)"
+          textShadow: "0 2px 10px rgba(0,0,0,0.5)",
         }}>
           StickyFlow ✨
         </div>
@@ -39,7 +39,7 @@ function Navbar() {
           fontSize: "16px", 
           color: "#aaa",
           marginTop: "8px",
-          letterSpacing: "1px"
+          letterSpacing: "1px",
         }}>
           Your personal sticky notes
         </div>
@@ -47,13 +47,13 @@ function Navbar() {
           onClick={handleLogoutClick}
           style={{
             position: "absolute",
-            top: "20px",
+            top: "25px",
             right: "30px",
             background: "linear-gradient(135deg, #ff4444 0%, #cc3333 100%)",
             color: "white",
             border: "none",
             padding: "16px 32px",
-            borderRadius: "30px",
+            borderRadius: "50px",
             fontSize: "16px",
             fontWeight: "700",
             cursor: "pointer",

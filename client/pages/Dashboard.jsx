@@ -218,7 +218,7 @@ function Dashboard() {
       {/* STICKIES CONTAINER */}
       <div style={{ 
         height: "100vh", 
-        paddingTop: showWelcome ? "200px" : "140px", // Account for welcome bar height
+        paddingTop: showWelcome ? "200px" : "80px", // Account for welcome bar height
         paddingBottom: "80px",
         overflowY: "auto",
         position: "relative"
