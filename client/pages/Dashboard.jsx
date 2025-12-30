@@ -218,7 +218,7 @@ function Dashboard() {
       {/* STICKIES CONTAINER */}
       <div style={{ 
         height: "100vh", 
-        paddingTop: showWelcome ? "140px" : "0", // Account for welcome bar height
+        paddingTop: showWelcome ? "200px" : "140px", // Account for welcome bar height
         paddingBottom: "80px",
         overflowY: "auto",
         position: "relative"
@@ -254,7 +254,6 @@ function Dashboard() {
           boxShadow: "0 8px 25px rgba(255,235,59,0.4)",
           transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
           zIndex: 1000,
-          border: "3px solid rgba(255,255,255,0.3)"
         }}
         onMouseEnter={e => {
           e.target.style.transform = "scale(1.15) rotate(90deg)"

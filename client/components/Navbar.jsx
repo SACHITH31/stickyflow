@@ -12,47 +12,68 @@ function Navbar() {
 
   return (
     <>
+      {/* ✅ TALL NAVBAR - 140px like welcome bar */}
       <div style={{
-        height: "60px",
-        backgroundColor: "#111",
+        height: "140px", // Same as welcome bar!
+        background: "linear-gradient(135deg, #111 0%, #1a1a1a 100%)",
         color: "#fff",
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
-        padding: "0 20px",
-        justifyContent: "space-between",
-        fontSize: "20px",
-        fontWeight: "bold",
-        boxShadow: "0 2px 20px rgba(0,0,0,0.3)"
+        justifyContent: "center",
+        padding: "0 40px",
+        fontSize: "32px",
+        fontWeight: "800",
+        boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+        position: "relative",
+        borderBottom: "1px solid rgba(255,255,255,0.1)"
       }}>
-        StickyFlow
+        <div style={{ 
+          fontSize: "36px", 
+          letterSpacing: "2px",
+          textShadow: "0 2px 10px rgba(0,0,0,0.5)"
+        }}>
+          StickyFlow ✨
+        </div>
+        <div style={{ 
+          fontSize: "16px", 
+          color: "#aaa",
+          marginTop: "8px",
+          letterSpacing: "1px"
+        }}>
+          Your personal sticky notes
+        </div>
         <button 
           onClick={handleLogoutClick}
           style={{
+            position: "absolute",
+            top: "20px",
+            right: "30px",
             background: "linear-gradient(135deg, #ff4444 0%, #cc3333 100%)",
             color: "white",
             border: "none",
-            padding: "10px 20px",
-            borderRadius: "25px",
-            fontSize: "14px",
-            fontWeight: "600",
+            padding: "16px 32px",
+            borderRadius: "30px",
+            fontSize: "16px",
+            fontWeight: "700",
             cursor: "pointer",
-            boxShadow: "0 4px 15px rgba(255,68,68,0.4)",
+            boxShadow: "0 8px 25px rgba(255,68,68,0.4)",
             transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
           }}
           onMouseEnter={e => {
             e.target.style.transform = "scale(1.05)"
-            e.target.style.boxShadow = "0 6px 20px rgba(255,68,68,0.6)"
+            e.target.style.boxShadow = "0 12px 35px rgba(255,68,68,0.6)"
           }}
           onMouseLeave={e => {
             e.target.style.transform = "scale(1)"
-            e.target.style.boxShadow = "0 4px 15px rgba(255,68,68,0.4)"
+            e.target.style.boxShadow = "0 8px 25px rgba(255,68,68,0.4)"
           }}
         >
           Logout
         </button>
       </div>
 
-      {/* ✅ BEAUTIFUL LOGOUT POPUP */}
+      {/* Logout popup - unchanged (perfect) */}
       {showLogoutConfirm && (
         <div style={{
           position: "fixed",
@@ -64,6 +85,7 @@ function Navbar() {
           justifyContent: "center",
           zIndex: 9999
         }}>
+          {/* Same popup as before */}
           <div style={{
             background: "white",
             padding: "40px",
@@ -93,58 +115,52 @@ function Navbar() {
               Are you sure? You'll need to log in again to access your stickies.
             </p>
             <div style={{ display: "flex", gap: "16px", justifyContent: "center" }}>
-              <button
-                onClick={handleLogoutConfirm}
-                style={{
-                  padding: "14px 32px",
-                  background: "linear-gradient(135deg, #ff4444 0%, #cc3333 100%)",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "50px",
-                  fontSize: "16px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  boxShadow: "0 6px 20px rgba(255,68,68,0.4)",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                  minWidth: "120px"
-                }}
-                onMouseEnter={e => {
-                  e.target.style.transform = "scale(1.05)"
-                  e.target.style.boxShadow = "0 8px 25px rgba(255,68,68,0.6)"
-                }}
-                onMouseLeave={e => {
-                  e.target.style.transform = "scale(1)"
-                  e.target.style.boxShadow = "0 6px 20px rgba(255,68,68,0.4)"
-                }}
-              >
+              <button onClick={handleLogoutConfirm} style={{
+                padding: "14px 32px",
+                background: "linear-gradient(135deg, #ff4444 0%, #cc3333 100%)",
+                color: "white",
+                border: "none",
+                borderRadius: "50px",
+                fontSize: "16px",
+                fontWeight: "600",
+                cursor: "pointer",
+                boxShadow: "0 6px 20px rgba(255,68,68,0.4)",
+                transition: "all 0.3s",
+                minWidth: "120px"
+              }}
+              onMouseEnter={e => {
+                e.target.style.transform = "scale(1.05)"
+                e.target.style.boxShadow = "0 8px 25px rgba(255,68,68,0.6)"
+              }}
+              onMouseLeave={e => {
+                e.target.style.transform = "scale(1)"
+                e.target.style.boxShadow = "0 6px 20px rgba(255,68,68,0.4)"
+              }}>
                 Yes, Logout
               </button>
-              <button
-                onClick={handleLogoutCancel}
-                style={{
-                  padding: "14px 32px",
-                  background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
-                  color: "#495057",
-                  border: "1px solid #dee2e6",
-                  borderRadius: "50px",
-                  fontSize: "16px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                  minWidth: "120px"
-                }}
-                onMouseEnter={e => {
-                  e.target.style.transform = "scale(1.05)"
-                  e.target.style.background = "#e9ecef"
-                  e.target.style.boxShadow = "0 6px 20px rgba(0,0,0,0.15)"
-                }}
-                onMouseLeave={e => {
-                  e.target.style.transform = "scale(1)"
-                  e.target.style.background = "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)"
-                  e.target.style.boxShadow = "0 4px 15px rgba(0,0,0,0.1)"
-                }}
-              >
+              <button onClick={handleLogoutCancel} style={{
+                padding: "14px 32px",
+                background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
+                color: "#495057",
+                border: "1px solid #dee2e6",
+                borderRadius: "50px",
+                fontSize: "16px",
+                fontWeight: "600",
+                cursor: "pointer",
+                boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+                transition: "all 0.3s",
+                minWidth: "120px"
+              }}
+              onMouseEnter={e => {
+                e.target.style.transform = "scale(1.05)"
+                e.target.style.background = "#e9ecef"
+                e.target.style.boxShadow = "0 6px 20px rgba(0,0,0,0.15)"
+              }}
+              onMouseLeave={e => {
+                e.target.style.transform = "scale(1)"
+                e.target.style.background = "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)"
+                e.target.style.boxShadow = "0 4px 15px rgba(0,0,0,0.1)"
+              }}>
                 Cancel
               </button>
             </div>

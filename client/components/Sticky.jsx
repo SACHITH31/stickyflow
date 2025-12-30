@@ -3,16 +3,23 @@ import { useState, useRef, useEffect } from 'react';
 function Sticky({ id, text, color, top, left, updateText, updateColor, updatePosition, deleteSticky, animate }) {
   const [isDragging, setIsDragging] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [title, setTitle] = useState(text.split('\n')[0] || "Untitled");
+  const [content, setContent] = useState(text.split('\n').slice(1).join('\n') || "");
   const stickyRef = useRef(null);
-  const textRef = useRef(null);
+  const titleRef = useRef(null);
+  const contentRef = useRef(null);
 
-  // ✅ OLD SMOOTH DRAGGING - FIXED hover bug
+  // ✅ TITLE + CONTENT SEPARATION
+  const fullText = title + '\n' + content;
+  useEffect(() => {
+    updateText(id, fullText);
+  }, [title, content]);
+
+  // ✅ FIXED DRAGGING
   const handleMouseDown = (e) => {
-    // Block drag on controls/editing
     if (e.target.closest('.controls') || editMode) return;
-    
     setIsDragging(true);
     const rect = stickyRef.current.getBoundingClientRect();
     setDragOffset({
@@ -25,8 +32,6 @@ function Sticky({ id, text, color, top, left, updateText, updateColor, updatePos
 
   const handleMouseMove = (e) => {
     if (!isDragging) return;
-    e.preventDefault();
-    
     const newTop = e.clientY - dragOffset.y;
     const newLeft = e.clientX - dragOffset.x;
     updatePosition(id, newTop, newLeft);
@@ -38,44 +43,25 @@ function Sticky({ id, text, color, top, left, updateText, updateColor, updatePos
   };
 
   // ✅ CLICK TO EDIT
-  const handleTextClick = () => {
+  const startEdit = () => {
     setEditMode(true);
-    setTimeout(() => textRef.current?.focus(), 100);
+    setTimeout(() => {
+      titleRef.current?.focus();
+      contentRef.current?.focus();
+    }, 100);
   };
 
-  const handleTextBlur = () => {
+  const stopEdit = () => {
     setEditMode(false);
-    const newText = textRef.current?.innerText || text;
-    if (newText !== text) updateText(id, newText);
   };
 
-  // ✅ DELETE CONFIRM
-  const confirmDelete = () => {
-    deleteSticky(id);
-    setShowDeleteConfirm(false);
-  };
-
-  useEffect(() => {
-    const handleGlobalMouseUp = () => {
-      if (isDragging) handleMouseUp();
-    };
-
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleGlobalMouseUp);
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleGlobalMouseUp);
-    };
-  }, [isDragging, dragOffset]);
-
-  // ✅ COLOR-BASED TEXT COLOR
+  // ✅ COLOR BASED TEXT
   const getTextColor = (bgColor) => {
     const darkColors = ['#2196f3', '#e91e63', '#9c27b0'];
     return darkColors.includes(bgColor) ? '#fff' : '#333';
   };
+
+  const textColor = getTextColor(color);
 
   return (
     <>
@@ -86,121 +72,143 @@ function Sticky({ id, text, color, top, left, updateText, updateColor, updatePos
           position: 'absolute',
           top: `${top}px`,
           left: `${left}px`,
-          width: '320px',  // ✅ OLD SIZE
-          height: '200px', // ✅ OLD SIZE
+          width: '340px',
+          minHeight: '220px',
+          maxHeight: '400px', // Limit max growth
           background: color,
-          borderRadius: '16px',
-          padding: '24px',
-          boxShadow: animate 
-            ? '0 25px 50px rgba(0,0,0,0.4)' 
-            : '0 10px 30px rgba(0,0,0,0.2)',
-          transform: isDragging ? 'scale(1.02)' : (animate ? 'scale(1.05) rotate(2deg)' : 'scale(1)'),
+          borderRadius: '20px',
+          padding: '28px',
+          boxShadow: animate ? '0 30px 60px rgba(0,0,0,0.4)' : '0 12px 35px rgba(0,0,0,0.25)',
+          transform: isDragging ? 'scale(1.02)' : (animate ? 'scale(1.05) rotate(3deg)' : 'scale(1)'),
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           cursor: isDragging ? 'grabbing' : (editMode ? 'text' : 'grab'),
           zIndex: isDragging ? 10001 : 1,
           fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
-          border: '2px solid rgba(255,255,255,0.3)',
+          border: '3px solid rgba(255,255,255,0.4)',
           overflow: 'hidden'
         }}
         onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
       >
         <style>{`
           @keyframes bounceIn {
-            0% { transform: scale(0.3) rotate(-12deg); opacity: 0; }
-            50% { transform: scale(1.1) rotate(6deg); }
+            0% { transform: scale(0.3) rotate(-15deg); opacity: 0; }
+            50% { transform: scale(1.1) rotate(8deg); }
             100% { transform: scale(1) rotate(0deg); opacity: 1; }
           }
-          .text-display, .text-edit {
-            font-size: 15px; 
-            line-height: 1.5; 
-            min-height: 120px;
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            border: none;
-            background: transparent;
-            font-family: inherit;
-            resize: none;
-            outline: none;
-            overflow: hidden;
+          .title-display, .title-edit {
+            font-size: 20px !important; 
+            font-weight: 700 !important;
+            line-height: 1.3 !important;
+            margin: 0 0 12px 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            background: transparent !important;
+            width: 100% !important;
+            font-family: inherit !important;
+            outline: none !important;
+            color: ${textColor} !important;
           }
-          .text-display { cursor: pointer; pointer-events: all; }
-          .text-edit { caret-color: #333; }
+          .content-display, .content-edit {
+            font-size: 14px !important; 
+            line-height: 1.6 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            background: transparent !important;
+            width: 100% !important;
+            font-family: inherit !important;
+            outline: none !important;
+            color: ${textColor} !important;
+            min-height: 80px;
+          }
+          .title-display { cursor: pointer; }
           .controls { 
             position: absolute; 
-            top: 12px; 
-            right: 12px;
+            top: 16px; 
+            right: 16px;
             display: flex; 
-            gap: 8px; 
+            gap: 10px; 
             opacity: 0; 
+            transform: translateY(-10px);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: none;
           }
           .sticky:hover .controls { 
             opacity: 1; 
-            transform: translateY(0) scale(1);
+            transform: translateY(0);
             pointer-events: all;
           }
           .delete-btn, .color-btn { 
-            width: 40px; 
-            height: 40px; 
+            width: 44px; 
+            height: 44px; 
             border: none; 
-            border-radius: 12px; 
+            border-radius: 14px; 
             cursor: pointer; 
-            font-size: 16px; 
+            font-size: 18px; 
             font-weight: bold;
             display: flex; 
             align-items: center; 
             justify-content: center;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-            backdrop-filter: blur(10px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
           }
           .delete-btn { 
-            background: rgba(255,68,68,0.9); 
+            background: rgba(255,68,68,0.95); 
             color: white; 
-            font-size: 18px;
           }
           .delete-btn:hover { 
-            transform: scale(1.2) rotate(90deg); 
-            box-shadow: 0 8px 25px rgba(255,68,68,0.5);
+            transform: scale(1.1); 
+            box-shadow: 0 10px 30px rgba(255,68,68,0.5);
             background: #ff4444;
           }
           .color-btn { 
-            background: rgba(255,255,255,0.8); 
-            color: ${getTextColor(color)}; 
-            font-size: 14px;
+            background: rgba(255,255,255,0.85); 
+            color: ${textColor};
+            font-size: 16px;
           }
           .color-btn:hover { 
-            transform: scale(1.2); 
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            transform: scale(1.1); 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35);
             background: rgba(255,255,255,1);
           }
         `}</style>
 
-        {/* ✅ CLICK-TO-EDIT TEXT */}
+        {/* ✅ TITLE + CONTENT EDITING */}
         {editMode ? (
-          <div 
-            ref={textRef}
-            className="text-edit"
-            contentEditable
-            suppressContentEditableWarning={true}
-            onBlur={handleTextBlur}
-            style={{ color: getTextColor(color) }}
-          >
-            {text || "New Sticky ✨"}
-          </div>
+          <>
+            <div 
+              ref={titleRef}
+              className="title-edit"
+              contentEditable
+              suppressContentEditableWarning={true}
+              onInput={(e) => setTitle(e.currentTarget.innerText || "Untitled")}
+            >
+              {title}
+            </div>
+            <div 
+              ref={contentRef}
+              className="content-edit"
+              contentEditable
+              suppressContentEditableWarning={true}
+              onInput={(e) => setContent(e.currentTarget.innerText)}
+              onBlur={stopEdit}
+            >
+              {content}
+            </div>
+          </>
         ) : (
-          <div 
-            className="text-display"
-            onClick={handleTextClick}
-            style={{ color: getTextColor(color) }}
-          >
-            {text || "New Sticky ✨"}
-          </div>
+          <>
+            <div className="title-display" onClick={startEdit}>
+              {title || "Untitled"}
+            </div>
+            <div className="content-display" onClick={startEdit}>
+              {content || "Start writing your notes..."}
+            </div>
+          </>
         )}
 
-        {/* ✅ HOVER CONTROLS - TOP RIGHT */}
+        {/* ✅ TOP CONTROLS - NO ANIMATION ON DELETE */}
         <div className="controls">
           <button 
             className="delete-btn" 
@@ -228,7 +236,7 @@ function Sticky({ id, text, color, top, left, updateText, updateColor, updatePos
         </div>
       </div>
 
-      {/* ✅ LOGOUT-STYLE DELETE POPUP */}
+      {/* ✅ DELETE POPUP - WORKING */}
       {showDeleteConfirm && (
         <div style={{
           position: "fixed",
@@ -247,16 +255,8 @@ function Sticky({ id, text, color, top, left, updateText, updateColor, updatePos
             textAlign: "center",
             maxWidth: "420px",
             boxShadow: "0 30px 60px rgba(0,0,0,0.4)",
-            border: "1px solid rgba(255,255,255,0.3)",
-            transform: "scale(1)",
-            animation: "popupSlide 0.3s ease-out"
+            border: "1px solid rgba(255,255,255,0.3)"
           }}>
-            <style>{`
-              @keyframes popupSlide {
-                from { transform: scale(0.7) translateY(20px); opacity: 0; }
-                to { transform: scale(1) translateY(0); opacity: 1; }
-              }
-            `}</style>
             <div style={{
               width: "80px", height: "80px",
               background: "linear-gradient(135deg, #ff4444 0%, #cc3333 100%)",
@@ -271,78 +271,77 @@ function Sticky({ id, text, color, top, left, updateText, updateColor, updatePos
             }}>
               🗑️
             </div>
-            <h3 style={{ 
-              color: "#333", 
-              marginBottom: "12px", 
-              fontSize: "24px", 
-              fontWeight: "700" 
-            }}>
-              Delete this Sticky?
+            <h3 style={{ color: "#333", marginBottom: "12px", fontSize: "24px", fontWeight: "700" }}>
+              Delete Sticky?
             </h3>
-            <p style={{ 
-              color: "#666", 
-              marginBottom: "32px", 
-              fontSize: "16px", 
-              lineHeight: "1.5" 
-            }}>
-              This action cannot be undone. The sticky will be permanently deleted.
+            <p style={{ color: "#666", marginBottom: "32px", fontSize: "16px", lineHeight: "1.5" }}>
+              This sticky will be permanently deleted.
             </p>
             <div style={{ display: "flex", gap: "16px", justifyContent: "center" }}>
-              <button
-                onClick={confirmDelete}
-                style={{
-                  padding: "14px 32px",
-                  background: "linear-gradient(135deg, #ff4444 0%, #cc3333 100%)",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "50px",
-                  fontSize: "16px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  boxShadow: "0 8px 25px rgba(255,68,68,0.4)",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                  minWidth: "120px"
-                }}
-                onMouseEnter={e => {
-                  e.target.style.transform = "scale(1.05)";
-                  e.target.style.boxShadow = "0 12px 35px rgba(255,68,68,0.6)";
-                }}
-                onMouseLeave={e => {
-                  e.target.style.transform = "scale(1)";
-                  e.target.style.boxShadow = "0 8px 25px rgba(255,68,68,0.4)";
-                }}
-              >
+              <button onClick={() => {
+                deleteSticky(id);
+                setShowDeleteConfirm(false);
+              }} style={{
+                padding: "14px 32px",
+                background: "linear-gradient(135deg, #ff4444 0%, #cc3333 100%)",
+                color: "white",
+                border: "none",
+                borderRadius: "50px",
+                fontSize: "16px",
+                fontWeight: "600",
+                cursor: "pointer",
+                boxShadow: "0 8px 25px rgba(255,68,68,0.4)",
+                transition: "all 0.3s",
+                minWidth: "120px"
+              }}
+              onMouseEnter={e => {
+                e.target.style.transform = "scale(1.05)";
+                e.target.style.boxShadow = "0 12px 35px rgba(255,68,68,0.6)";
+              }}
+              onMouseLeave={e => {
+                e.target.style.transform = "scale(1)";
+                e.target.style.boxShadow = "0 8px 25px rgba(255,68,68,0.4)";
+              }}>
                 Yes, Delete
               </button>
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                style={{
-                  padding: "14px 32px",
-                  background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
-                  color: "#495057",
-                  border: "1px solid #dee2e6",
-                  borderRadius: "50px",
-                  fontSize: "16px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                  minWidth: "120px"
-                }}
-                onMouseEnter={e => {
-                  e.target.style.transform = "scale(1.05)";
-                  e.target.style.boxShadow = "0 6px 20px rgba(0,0,0,0.15)";
-                }}
-                onMouseLeave={e => {
-                  e.target.style.transform = "scale(1)";
-                  e.target.style.boxShadow = "0 4px 15px rgba(0,0,0,0.1)";
-                }}
-              >
+              <button onClick={() => setShowDeleteConfirm(false)} style={{
+                padding: "14px 32px",
+                background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
+                color: "#495057",
+                border: "1px solid #dee2e6",
+                borderRadius: "50px",
+                fontSize: "16px",
+                fontWeight: "600",
+                cursor: "pointer",
+                boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+                transition: "all 0.3s",
+                minWidth: "120px"
+              }}
+              onMouseEnter={e => {
+                e.target.style.transform = "scale(1.05)";
+                e.target.style.boxShadow = "0 6px 20px rgba(0,0,0,0.15)";
+              }}
+              onMouseLeave={e => {
+                e.target.style.transform = "scale(1)";
+                e.target.style.boxShadow = "0 4px 15px rgba(0,0,0,0.1)";
+              }}>
                 Cancel
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* ✅ GLOBAL DRAG HANDLERS */}
+      {isDragging && (
+        <>
+          <style>{`
+            body { user-select: none !important; }
+          `}</style>
+          <div onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, cursor: 'grabbing'
+          }} />
+        </>
       )}
     </>
   );
