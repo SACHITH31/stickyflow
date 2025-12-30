@@ -1,0 +1,296 @@
+import { useState, useEffect } from "react"
+import Sticky from "../components/Sticky"
+
+function Dashboard() {
+  const [stickies, setStickies] = useState([])
+  const [deleteId, setDeleteId] = useState(null)
+  const [animateNew, setAnimateNew] = useState(null)
+  const [showWelcome, setShowWelcome] = useState(true)
+  const token = localStorage.getItem('token')
+  
+  // Decode JWT to get user info
+  const decoded = token ? JSON.parse(atob(token.split('.')[1])) : null
+  const userId = decoded?.id
+
+  // LOAD STICKIES
+  useEffect(() => {
+    if (!token) {
+      console.log("No token - login first")
+      return
+    }
+
+    fetch("http://localhost:5000/api/stickies", {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      return res.json()
+    })
+    .then(data => {
+      const formatted = data.map(item => ({
+        id: item.id,
+        text: item.text,
+        color: item.color || "#ffeb3b",
+        top: Number.isFinite(Number(item.top_pos)) && Number(item.top_pos) >= 0 ? Number(item.top_pos) : 100,
+        left: Number.isFinite(Number(item.left_pos)) && Number(item.left_pos) >= 0 ? Number(item.left_pos) : 100
+      }))
+      setStickies(formatted)
+      // Show welcome only if no stickies OR first visit
+      setShowWelcome(formatted.length === 0)
+    })
+    .catch(err => console.error("LOAD ERROR:", err))
+  }, [token])
+
+  const headers = {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+
+  // CREATE STICKY
+  const createSticky = async () => {
+    const res = await fetch("http://localhost:5000/api/stickies", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        text: "New Sticky ✨",
+        color: "#ffeb3b",
+        top_pos: 100,
+        left_pos: 100
+      })
+    })
+
+    const newSticky = await res.json()
+
+    const sticky = {
+      id: newSticky.id,
+      text: newSticky.text,
+      color: newSticky.color,
+      top: Number(newSticky.top_pos),
+      left: Number(newSticky.left_pos)
+    }
+
+    setStickies(prev => [...prev, sticky])
+    setAnimateNew(sticky.id)
+    setShowWelcome(false) // Hide welcome after first sticky
+    setTimeout(() => setAnimateNew(null), 500)
+  }
+
+  // UPDATE TEXT
+  const updateStickyText = async (id, newText) => {
+    setStickies(prev =>
+      prev.map(s => s.id === id ? { ...s, text: newText } : s)
+    )
+
+    const s = stickies.find(x => x.id === id)
+
+    await fetch(`http://localhost:5000/api/stickies/${id}`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({
+        text: newText,
+        color: s.color,
+        top_pos: s.top,
+        left_pos: s.left
+      })
+    })
+  }
+
+  // UPDATE COLOR
+  const updateStickyColor = async (id, newColor) => {
+    setStickies(prev =>
+      prev.map(s => s.id === id ? { ...s, color: newColor } : s)
+    )
+
+    const s = stickies.find(x => x.id === id)
+
+    await fetch(`http://localhost:5000/api/stickies/${id}`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({
+        text: s.text,
+        color: newColor,
+        top_pos: s.top,
+        left_pos: s.left
+      })
+    })
+  }
+
+  // UPDATE POSITION (DRAG)
+  const updateStickyPosition = async (id, top, left) => {
+    setStickies(prev =>
+      prev.map(s =>
+        s.id === id ? { ...s, top, left } : s
+      )
+    )
+
+    const s = stickies.find(x => x.id === id)
+
+    await fetch(`http://localhost:5000/api/stickies/${id}`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({
+        text: s.text,
+        color: s.color,
+        top_pos: top,
+        left_pos: left
+      })
+    })
+  }
+
+  // DELETE
+  const deleteSticky = (id, confirm = false) => {
+    if (!confirm) return setDeleteId(id)
+
+    fetch(`http://localhost:5000/api/stickies/${id}`, {
+      method: "DELETE",
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+
+    setStickies(prev => prev.filter(s => s.id !== id))
+    setDeleteId(null)
+  }
+
+  return (
+    <div style={{ height: "100vh", width: "100vw", position: "relative", overflow: "hidden" }}>
+      
+      {/* WELCOME MESSAGE - First time or no stickies */}
+      {showWelcome && (
+        <div style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          color: "white",
+          padding: "40px 60px",
+          borderRadius: "20px",
+          textAlign: "center",
+          boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
+          maxWidth: "400px",
+          zIndex: 1000,
+          animation: "fadeInUp 0.6s ease-out"
+        }}>
+          <style>{`
+            @keyframes fadeInUp {
+              from { opacity: 0; transform: translate(-50%, -30%) scale(0.9); }
+              to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            }
+          `}</style>
+          <h1 style={{ fontSize: "28px", marginBottom: "10px", fontWeight: "bold" }}>
+            Welcome to StickyFlow! ✨
+          </h1>
+          <p style={{ fontSize: "18px", marginBottom: "30px", opacity: 0.95 }}>
+            Create beautiful sticky notes that you can drag, edit, and organize.
+          </p>
+          <div style={{
+            width: "80px",
+            height: "80px",
+            background: "#ffeb3b",
+            borderRadius: "50%",
+            margin: "0 auto 20px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "40px",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+            cursor: "pointer",
+            transition: "all 0.3s"
+          }}
+          onClick={createSticky}
+          onMouseEnter={e => {
+            e.target.style.transform = "scale(1.1)"
+            e.target.style.boxShadow = "0 15px 40px rgba(0,0,0,0.4)"
+          }}
+          onMouseLeave={e => {
+            e.target.style.transform = "scale(1)"
+            e.target.style.boxShadow = "0 10px 30px rgba(0,0,0,0.3)"
+          }}
+          >
+            +
+          </div>
+        </div>
+      )}
+
+      {/* EMPTY STATE - No stickies but welcome dismissed */}
+      {stickies.length === 0 && !showWelcome && (
+        <div style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          color: "#666",
+          textAlign: "center",
+          fontSize: "24px",
+          zIndex: 100
+        }}>
+          No stickies yet... 
+          <br />
+          <button 
+            onClick={createSticky}
+            style={{
+              background: "#ffeb3b",
+              border: "none",
+              padding: "12px 24px",
+              borderRadius: "25px",
+              fontSize: "16px",
+              cursor: "pointer",
+              marginTop: "20px",
+              fontWeight: "bold",
+              boxShadow: "0 5px 15px rgba(0,0,0,0.2)"
+            }}
+          >
+            Create First Sticky ✨
+          </button>
+        </div>
+      )}
+
+      {/* EXISTING STICKIES */}
+      {stickies.map(sticky => (
+        <Sticky
+          key={sticky.id}
+          {...sticky}
+          updateText={updateStickyText}
+          updateColor={updateStickyColor}
+          updatePosition={updateStickyPosition}
+          deleteSticky={deleteSticky}
+          animate={animateNew === sticky.id}
+        />
+      ))}
+
+      {/* FAB BUTTON */}
+      <button
+        onClick={createSticky}
+        style={{
+          position: "absolute",
+          bottom: "30px",
+          right: "30px",
+          width: "60px",
+          height: "60px",
+          borderRadius: "50%",
+          border: "none",
+          backgroundColor: "#ffcc00",
+          fontSize: "30px",
+          cursor: "pointer",
+          boxShadow: "0 4px 15px rgba(0,0,0,0.3)",
+          transition: "all 0.3s",
+          zIndex: 100
+        }}
+        onMouseEnter={e => {
+          e.target.style.transform = "scale(1.15)"
+          e.target.style.boxShadow = "0 6px 20px rgba(0,0,0,0.4)"
+        }}
+        onMouseLeave={e => {
+          e.target.style.transform = "scale(1)"
+          e.target.style.boxShadow = "0 4px 15px rgba(0,0,0,0.3)"
+        }}
+      >
+        +
+      </button>
+    </div>
+  )
+}
+
+export default Dashboard
